@@ -31,6 +31,19 @@ static const CGFloat kEMCCountryCellControllerMinCellHeight = 25;
     NSArray *_countrySearchResults;
 }
 
+- (NSIndexPath *)indexPathForCountry:(EMCCountry *)country
+{
+    NSInteger section = 0;
+    NSInteger row = 0;
+    
+    NSString *key = [[country countryName] substringToIndex:1];
+    section = [[self sortedKey] indexOfObject:key];
+    NSArray *aSection = [[self dataSource] objectForKey:key];
+    row = [aSection indexOfObject:country];
+    
+    return [NSIndexPath indexPathForItem:row inSection:section];
+}
+
 - (NSDictionary *)dataSource
 {
     if (!_dataSource) {
@@ -190,14 +203,9 @@ static const CGFloat kEMCCountryCellControllerMinCellHeight = 25;
         return;
     
     [countryTable reloadData];
-    
-    NSUInteger selectedObjectIndex = [_countries indexOfObject:_selectedCountry];
-    
-    if (selectedObjectIndex != NSNotFound)
-    {
-        NSIndexPath * ip = [NSIndexPath indexPathForItem:selectedObjectIndex inSection:0];
-        [countryTable selectRowAtIndexPath:ip animated:YES scrollPosition:UITableViewScrollPositionMiddle];
-    }
+
+    NSIndexPath *ip = [self indexPathForCountry:_selectedCountry];
+    [countryTable selectRowAtIndexPath:ip animated:YES scrollPosition:UITableViewScrollPositionMiddle];
 }
 
 - (void)loadView
