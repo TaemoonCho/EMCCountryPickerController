@@ -31,6 +31,33 @@ static const CGFloat kEMCCountryCellControllerMinCellHeight = 25;
     NSArray *_countrySearchResults;
 }
 
+- (NSDictionary *)dataSource
+{
+    if (!_dataSource) {
+        _dataSource = [[EMCCountryManager countryManager] allCountriesWithSections];
+    }
+    return _dataSource;
+}
+
+- (NSArray *)sortedKey
+{
+    if (!_sortedKey) {
+        _sortedKey = [[[self dataSource] allKeys] sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)];
+    }
+    return _sortedKey;
+}
+
+- (NSString *)keyForSection:(NSInteger)section
+{
+    return [self sortedKey][section];
+}
+
+- (EMCCountry *)countryAtIndexPath:(NSIndexPath *)indexPath
+{
+    NSString *key = [self keyForSection:[indexPath section]];
+    return ((NSArray *)[self dataSource][key])[indexPath.row];
+}
+
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
@@ -62,6 +89,7 @@ static const CGFloat kEMCCountryCellControllerMinCellHeight = 25;
     // Do any additional setup after loading the view.
     [self validateSettings];
     [self loadCountries];
+    [self dataSource];
     
     if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1)
     {
@@ -238,7 +266,11 @@ static const CGFloat kEMCCountryCellControllerMinCellHeight = 25;
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
     // Return the number of sections.
-    return 1;
+    if (tableView == self.searchDisplayController.searchResultsTableView)
+    {
+        return 1;
+    }
+    return [[[self dataSource] allKeys] count];
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
@@ -249,7 +281,8 @@ static const CGFloat kEMCCountryCellControllerMinCellHeight = 25;
     }
     
     // Return the number of rows in the section.
-    return [_countries count];
+    NSString *key = [self keyForSection:section];
+    return [[[self dataSource] objectForKey:key] count];
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
@@ -265,7 +298,7 @@ static const CGFloat kEMCCountryCellControllerMinCellHeight = 25;
     }
     else
     {
-        _selectedCountry = [_countries objectAtIndex:indexPath.row];
+        _selectedCountry = [self countryAtIndexPath:indexPath];
     }
     
     if (!self.countryDelegate)
@@ -293,7 +326,7 @@ static const CGFloat kEMCCountryCellControllerMinCellHeight = 25;
     }
     else
     {
-        currentCountry = [_countries objectAtIndex:indexPath.row];
+        currentCountry = [self countryAtIndexPath:indexPath];
     }
     
     NSString *countryCode = [currentCountry countryCode];
@@ -310,7 +343,7 @@ static const CGFloat kEMCCountryCellControllerMinCellHeight = 25;
     // Resize flag
     if (self.showFlags)
     {
-        cell.imageView.image = [[UIImage imageNamed:countryCode] fitInSize:CGSizeMake(self.flagSize, self.flagSize)];
+        cell.imageView.image = [[UIImage imageNamed:countryCode] fitInSize:CGSizeMake(self.flagSize * 0.8, self.flagSize* 0.8)];
     }
     
     // Draw a border around the flag view if requested
@@ -341,6 +374,14 @@ static const CGFloat kEMCCountryCellControllerMinCellHeight = 25;
     }
     
     return MAX(tableView.rowHeight, self.flagSize);
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
+{
+    if (tableView == self.searchDisplayController.searchResultsTableView) {
+        return nil;
+    }
+    return [self keyForSection:section];
 }
 
 #pragma mark - Search Box Management

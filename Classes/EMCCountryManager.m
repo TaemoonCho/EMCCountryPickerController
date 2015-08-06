@@ -88,8 +88,26 @@ static EMCCountryManager *_countryManager;
     {
         [countries addObject:[self countryWithCode:code]];
     }
-    
+    [self allCountriesWithSections];
     return countries;
+}
+
+- (NSDictionary *)allCountriesWithSections
+{
+    NSMutableDictionary *sections = [[NSMutableDictionary alloc] init];
+    for (id code in countryKeysArr)
+    {
+        EMCCountry *country = (EMCCountry *)[self countryWithCode:code];
+        NSString *sectionKey = [country.countryName substringToIndex:1];
+        NSMutableArray *aSection = [sections objectForKey:sectionKey];
+        if (!aSection) {
+            aSection = [[NSMutableArray alloc] init];
+            [sections setObject:aSection forKey:sectionKey];
+        }
+        [aSection addObject:country];
+    }
+
+    return sections;
 }
 
 @end
