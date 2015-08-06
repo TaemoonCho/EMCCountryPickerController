@@ -384,6 +384,16 @@ static const CGFloat kEMCCountryCellControllerMinCellHeight = 25;
     return [self keyForSection:section];
 }
 
+- (NSArray *)sectionIndexTitlesForTableView:(UITableView *)tableView
+{
+    return [self sortedKey];
+}
+
+- (NSInteger)tableView:(UITableView *)tableView sectionForSectionIndexTitle:(NSString *)title atIndex:(NSInteger)index
+{
+    return [[self sortedKey] indexOfObject:title];
+}
+
 #pragma mark - Search Box Management
 
 - (void)filterContentForSearchText:(NSString*)searchText
